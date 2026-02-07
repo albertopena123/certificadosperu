@@ -13,23 +13,8 @@ export const SITE_CONFIG = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  {
-    label: 'Categorias',
-    href: '/categorias',
-    children: [
-      { label: 'Administracion Publica', href: '/categorias/administracion-publica' },
-      { label: 'Salud', href: '/categorias/salud' },
-      { label: 'Educacion', href: '/categorias/educacion' },
-      { label: 'Derecho', href: '/categorias/derecho' },
-      { label: 'Gestion Empresarial', href: '/categorias/gestion-empresarial' },
-      { label: 'Tecnologia', href: '/categorias/tecnologia' },
-      { label: 'Contabilidad', href: '/categorias/contabilidad' },
-      { label: 'Recursos Humanos', href: '/categorias/recursos-humanos' },
-    ],
-  },
   { label: 'Cursos', href: '/cursos' },
   { label: 'Verificar Certificado', href: '/verificar' },
-  { label: 'Para Empresas', href: '/empresas' },
 ];
 
 export const FOOTER_SECTIONS: FooterSection[] = [
