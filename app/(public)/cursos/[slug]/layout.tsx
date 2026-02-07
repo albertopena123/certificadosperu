@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         descripcionCorta: true,
         descripcion: true,
         tipo: true,
-        horas: true,
+        horasAcademicas: true,
         imagen: true,
         categoria: {
           select: { nombre: true },
@@ -31,9 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const tipoLabel =
-      curso.tipo === 'diplomado'
+      curso.tipo === 'DIPLOMADO'
         ? 'Diplomado'
-        : curso.tipo === 'certificado'
+        : curso.tipo === 'CERTIFICADO'
         ? 'Certificado'
         : 'Constancia';
 
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description:
         curso.descripcionCorta ||
         curso.descripcion?.substring(0, 160) ||
-        `${tipoLabel} en ${curso.nombre}. ${curso.horas} horas académicas con certificado válido para procesos CAS y SERVIR.`,
+        `${tipoLabel} en ${curso.nombre}. ${curso.horasAcademicas} horas académicas con certificado válido para procesos CAS y SERVIR.`,
       keywords: [
         curso.nombre,
         `${tipoLabel.toLowerCase()} ${curso.nombre}`,
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: `${curso.nombre} | CertificadosPeru`,
         description:
           curso.descripcionCorta ||
-          `${tipoLabel} de ${curso.horas} horas con certificado válido para postulaciones laborales.`,
+          `${tipoLabel} de ${curso.horasAcademicas} horas con certificado válido para postulaciones laborales.`,
         url: `https://certificadosperu.com/cursos/${slug}`,
         images: curso.imagen
           ? [{ url: curso.imagen, width: 1200, height: 630 }]
