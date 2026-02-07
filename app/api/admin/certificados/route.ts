@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const configMap = configs.reduce((acc, c) => {
+    const configMap = configs.reduce((acc: Record<string, string>, c) => {
       acc[c.clave] = c.valor;
       return acc;
     }, {} as Record<string, string>);
