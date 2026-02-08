@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
   // Redirigir /uploads/* a /api/uploads/* para servir archivos en producción

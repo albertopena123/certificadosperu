@@ -2,7 +2,6 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { PromoBanner } from '@/components/layout/promo-banner';
 import { HeroSection } from '@/components/landing/hero-section';
-import { CategoriesSection } from '@/components/landing/categories-section';
 import { FeaturedCourses } from '@/components/landing/featured-courses';
 import { BenefitsSection } from '@/components/landing/benefits-section';
 import { HowItWorks } from '@/components/landing/how-it-works';
@@ -40,7 +39,6 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <HeroSection />
-        <CategoriesSection />
         <FeaturedCourses />
         <BenefitsSection />
         <HowItWorks />

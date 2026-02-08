@@ -21,7 +21,11 @@
       "Bash(findstr:*)",
       "Bash(netstat:*)",
       "Bash(timeout /t 8 /nobreak)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx prisma db seed)",
+      "Bash(npm uninstall:*)",
+      "Bash(del:*)",
+      "Bash(npx prisma db pull:*)"
     ]
   }
 }

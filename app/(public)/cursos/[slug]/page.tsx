@@ -36,6 +36,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { toast } from 'sonner';
 
 interface Course {
   id: string;
@@ -128,14 +129,21 @@ export default function CursoDetallePage() {
       });
 
       if (response.ok) {
+        toast.success('¡Inscripción exitosa!', {
+          description: 'Te has inscrito correctamente al curso.',
+        });
         router.push('/mi-cuenta/cursos');
       } else {
         const error = await response.json();
-        alert(error.error || 'Error al inscribirse');
+        toast.error('Error al inscribirse', {
+          description: error.error || 'No se pudo completar la inscripción.',
+        });
       }
     } catch (error) {
       console.error('Error enrolling:', error);
-      alert('Error de conexión');
+      toast.error('Error de conexión', {
+        description: 'Verifica tu conexión a internet e intenta nuevamente.',
+      });
     } finally {
       setEnrolling(false);
     }

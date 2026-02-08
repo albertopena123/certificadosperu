@@ -28,8 +28,40 @@ export async function GET(request: NextRequest) {
 
     const cursos = await prisma.curso.findMany({
       where,
-      include: {
-        categoria: true,
+      select: {
+        id: true,
+        nombre: true,
+        slug: true,
+        descripcion: true,
+        descripcionCorta: true,
+        tipo: true,
+        modalidad: true,
+        horasAcademicas: true,
+        horasCronologicas: true,
+        creditos: true,
+        precio: true,
+        precioOriginal: true,
+        imagen: true,
+        temario: true,
+        objetivos: true,
+        requisitos: true,
+        dirigidoA: true,
+        activo: true,
+        destacado: true,
+        fechaInicio: true,
+        fechaFin: true,
+        cupoMaximo: true,
+        createdAt: true,
+        updatedAt: true,
+        categoriaId: true,
+        creadorId: true,
+        categoria: {
+          select: {
+            id: true,
+            nombre: true,
+            slug: true,
+          },
+        },
         _count: {
           select: { inscripciones: true, certificados: true },
         },
@@ -106,6 +138,7 @@ export async function POST(request: NextRequest) {
           connect: { id: creadorId }
         },
       },
+      select: { id: true, nombre: true, slug: true },
     });
 
     return NextResponse.json(curso, { status: 201 });

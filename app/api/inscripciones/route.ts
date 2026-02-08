@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
     if (!session || session.user.userType !== 'participante') {
       return NextResponse.json(
-        { error: 'Debes iniciar sesión como participante' },
+        { error: 'Debes iniciar sesión' },
         { status: 401 }
       );
     }
@@ -25,8 +25,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar que el curso existe y está activo
-    const curso = await prisma.curso.findUnique({
+    const curso = await prisma.curso.findFirst({
       where: { id: cursoId, activo: true },
+      select: {
+        id: true,
+        nombre: true,
+        slug: true,
+        precio: true,
+        cupoMaximo: true,
+      },
     });
 
     if (!curso) {

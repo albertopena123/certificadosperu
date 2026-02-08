@@ -22,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MobileNav } from './mobile-nav';
+import { SearchCommand } from './search-command';
+import { MobileSearch } from './mobile-search';
 import { NAV_ITEMS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -101,21 +103,12 @@ export function Header() {
 
         {/* Search bar - desktop */}
         <div className="hidden md:flex flex-1 max-w-md mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar cursos..."
-              className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-300 bg-gray-50 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors"
-            />
-          </div>
+          <SearchCommand />
         </div>
 
         {/* Right side buttons */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Search className="h-5 w-5" />
-          </Button>
+          <MobileSearch />
 
           {isParticipante ? (
             <DropdownMenu>

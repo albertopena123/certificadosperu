@@ -9,10 +9,37 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const curso = await prisma.curso.findUnique({
+    const curso = await prisma.curso.findFirst({
       where: { id },
-      include: {
-        categoria: true,
+      select: {
+        id: true,
+        nombre: true,
+        slug: true,
+        descripcion: true,
+        descripcionCorta: true,
+        tipo: true,
+        modalidad: true,
+        horasAcademicas: true,
+        horasCronologicas: true,
+        creditos: true,
+        precio: true,
+        precioOriginal: true,
+        imagen: true,
+        temario: true,
+        objetivos: true,
+        requisitos: true,
+        dirigidoA: true,
+        activo: true,
+        destacado: true,
+        fechaInicio: true,
+        fechaFin: true,
+        cupoMaximo: true,
+        createdAt: true,
+        updatedAt: true,
+        categoriaId: true,
+        categoria: {
+          select: { id: true, nombre: true, slug: true },
+        },
         creador: {
           select: { id: true, nombre: true, email: true },
         },
@@ -85,6 +112,7 @@ export async function PUT(
         cupoMaximo: body.cupoMaximo,
         categoria: body.categoriaId ? { connect: { id: body.categoriaId } } : undefined,
       },
+      select: { id: true, nombre: true, slug: true },
     });
 
     return NextResponse.json(curso);
@@ -106,9 +134,10 @@ export async function DELETE(
     const { id } = await params;
 
     // Verificar si tiene inscripciones o certificados
-    const curso = await prisma.curso.findUnique({
+    const curso = await prisma.curso.findFirst({
       where: { id },
-      include: {
+      select: {
+        id: true,
         _count: {
           select: { inscripciones: true, certificados: true },
         },
@@ -127,6 +156,7 @@ export async function DELETE(
       await prisma.curso.update({
         where: { id },
         data: { activo: false },
+        select: { id: true },
       });
       return NextResponse.json({ message: 'Curso desactivado (tiene inscripciones/certificados)' });
     }

@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// Función para normalizar texto (quitar tildes)
+function removeAccents(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 // GET - Listar cursos públicos (activos)
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const categoria = searchParams.get('categoria');
     const tipo = searchParams.get('tipo');
+    const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '12');
     const destacados = searchParams.get('destacados') === 'true';
 
@@ -28,9 +34,26 @@ export async function GET(request: NextRequest) {
       where.destacado = true;
     }
 
-    const cursos = await prisma.curso.findMany({
+    // Si hay búsqueda, obtener más resultados para filtrar
+    const fetchLimit = search ? 100 : limit;
+
+    let cursos = await prisma.curso.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        nombre: true,
+        slug: true,
+        descripcion: true,
+        descripcionCorta: true,
+        tipo: true,
+        modalidad: true,
+        horasAcademicas: true,
+        precio: true,
+        precioOriginal: true,
+        imagen: true,
+        destacado: true,
+        createdAt: true,
+        temario: true,
         categoria: {
           select: {
             id: true,
@@ -46,8 +69,22 @@ export async function GET(request: NextRequest) {
         { destacado: 'desc' },
         { createdAt: 'desc' },
       ],
-      take: limit,
+      take: fetchLimit,
     });
+
+    // Filtrar por búsqueda (insensible a tildes y mayúsculas)
+    if (search) {
+      const searchNormalized = removeAccents(search.toLowerCase());
+      cursos = cursos.filter(curso => {
+        const nombre = removeAccents(curso.nombre.toLowerCase());
+        const descripcion = removeAccents((curso.descripcion || '').toLowerCase());
+        const descripcionCorta = removeAccents((curso.descripcionCorta || '').toLowerCase());
+
+        return nombre.includes(searchNormalized) ||
+               descripcion.includes(searchNormalized) ||
+               descripcionCorta.includes(searchNormalized);
+      }).slice(0, limit);
+    }
 
     // Transformar al formato esperado por el frontend
     const cursosFormateados = cursos.map((curso) => ({
@@ -89,7 +126,7 @@ export async function GET(request: NextRequest) {
         curso.tipo === 'CERTIFICADO' ? 'Certificado' : 'Constancia',
         `${curso.horasAcademicas} horas`,
       ],
-      highlights: curso.temario?.slice(0, 4) || [],
+      highlights: ((curso.temario as string[]) || []).slice(0, 4),
     }));
 
     return NextResponse.json(cursosFormateados);

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Filter, Loader2, GraduationCap, Award, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,13 +30,20 @@ const tipoConfig: Record<string, { icon: any; label: string; color: string }> = 
   constancia: { icon: FileText, label: 'Constancias', color: 'bg-emerald-100 text-emerald-700' },
 };
 
-export default function CursosPage() {
+function CursosContent() {
+  const searchParams = useSearchParams();
+  const queryParam = searchParams.get('q') || '';
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(queryParam);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
+
+  useEffect(() => {
+    setSearchTerm(queryParam);
+  }, [queryParam]);
 
   useEffect(() => {
     Promise.all([fetchCourses(), fetchCategories()]);
@@ -207,5 +215,17 @@ export default function CursosPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CursosPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+      </div>
+    }>
+      <CursosContent />
+    </Suspense>
   );
 }

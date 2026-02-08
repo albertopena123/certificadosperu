@@ -75,14 +75,6 @@ export function FeaturedCourses() {
     return (
       <section className="py-12 md:py-16">
         <div className="container">
-          <div className="mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Habilidades para transformar tu carrera profesional
-            </h2>
-            <p className="text-gray-600">
-              Próximamente tendremos cursos disponibles para ti.
-            </p>
-          </div>
           <div className="text-center py-12 bg-gray-50 rounded-xl">
             <p className="text-gray-500">No hay cursos disponibles aún.</p>
           </div>

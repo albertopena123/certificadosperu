@@ -9,9 +9,30 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    const curso = await prisma.curso.findUnique({
+    const curso = await prisma.curso.findFirst({
       where: { slug, activo: true },
-      include: {
+      select: {
+        id: true,
+        nombre: true,
+        slug: true,
+        descripcion: true,
+        descripcionCorta: true,
+        tipo: true,
+        modalidad: true,
+        horasAcademicas: true,
+        horasCronologicas: true,
+        creditos: true,
+        precio: true,
+        precioOriginal: true,
+        imagen: true,
+        temario: true,
+        objetivos: true,
+        requisitos: true,
+        dirigidoA: true,
+        destacado: true,
+        fechaInicio: true,
+        fechaFin: true,
+        cupoMaximo: true,
         categoria: {
           select: {
             id: true,
@@ -55,10 +76,10 @@ export async function GET(
         name: curso.categoria?.nombre,
         slug: curso.categoria?.slug,
       },
-      syllabus: curso.temario || [],
-      objectives: curso.objetivos || [],
-      requirements: curso.requisitos || [],
-      targetAudience: curso.dirigidoA || [],
+      syllabus: (curso.temario as string[]) || [],
+      objectives: (curso.objetivos as string[]) || [],
+      requirements: (curso.requisitos as string[]) || [],
+      targetAudience: (curso.dirigidoA as string[]) || [],
       startDate: curso.fechaInicio,
       endDate: curso.fechaFin,
       maxCapacity: curso.cupoMaximo,

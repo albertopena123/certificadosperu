@@ -6,32 +6,21 @@ datasource db {
   provider = "postgresql"
 }
 
-// Usuario administrador
 model Usuario {
-  id            String   @id @default(cuid())
-  nombre        String
-  email         String   @unique
-  password      String
-  rol           Rol      @default(ADMIN)
-  avatar        String?
-  activo        Boolean  @default(true)
-  ultimoAcceso  DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relaciones
-  cursosCreados        Curso[]       @relation("CursoCreador")
+  id                   String        @id @default(cuid())
+  nombre               String
+  email                String        @unique
+  password             String
+  rol                  Rol           @default(ADMIN)
+  avatar               String?
+  activo               Boolean       @default(true)
+  ultimoAcceso         DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
   certificadosEmitidos Certificado[] @relation("CertificadoEmitidoPor")
-  plantillasCreadas    PlantillaCertificado[] @relation("PlantillaCreador")
+  cursosCreados        Curso[]       @relation("CursoCreador")
 }
 
-enum Rol {
-  SUPERADMIN
-  ADMIN
-  EDITOR
-}
-
-// Categoría de cursos
 model Categoria {
   id          String   @id @default(cuid())
   nombre      String
@@ -42,16 +31,13 @@ model Categoria {
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  // Relaciones
-  cursos Curso[]
+  cursos      Curso[]
 }
 
-// Curso/Programa
 model Curso {
-  id                String    @id @default(cuid())
+  id                String        @id @default(cuid())
   nombre            String
-  slug              String    @unique
+  slug              String        @unique
   descripcion       String
   descripcionCorta  String?
   tipo              TipoCurso
@@ -62,40 +48,25 @@ model Curso {
   precio            Float
   precioOriginal    Float?
   imagen            String?
-  temario           String[]
-  objetivos         String[]
-  requisitos        String[]
-  dirigidoA         String[]
-  activo            Boolean   @default(true)
-  destacado         Boolean   @default(false)
+  temario           Json          @default("[]")
+  objetivos         Json          @default("[]")
+  requisitos        Json          @default("[]")
+  dirigidoA         Json          @default("[]")
+  activo            Boolean       @default(true)
+  destacado         Boolean       @default(false)
   fechaInicio       DateTime?
   fechaFin          DateTime?
   cupoMaximo        Int?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relaciones
-  categoriaId   String
-  categoria     Categoria     @relation(fields: [categoriaId], references: [id])
-  creadorId     String
-  creador       Usuario       @relation("CursoCreador", fields: [creadorId], references: [id])
-  inscripciones Inscripcion[]
-  certificados  Certificado[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  categoriaId       String
+  creadorId         String
+  certificados      Certificado[]
+  categoria         Categoria     @relation(fields: [categoriaId], references: [id])
+  creador           Usuario       @relation("CursoCreador", fields: [creadorId], references: [id])
+  inscripciones     Inscripcion[]
 }
 
-enum TipoCurso {
-  DIPLOMADO
-  CERTIFICADO
-  CONSTANCIA
-}
-
-enum Modalidad {
-  VIRTUAL
-  PRESENCIAL
-  SEMIPRESENCIAL
-}
-
-// Participante/Estudiante
 model Participante {
   id              String        @id @default(cuid())
   nombreCompleto  String
@@ -114,19 +85,10 @@ model Participante {
   emailVerificado Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-
-  // Relaciones
-  inscripciones Inscripcion[]
-  certificados  Certificado[]
+  certificados    Certificado[]
+  inscripciones   Inscripcion[]
 }
 
-enum TipoDocumento {
-  DNI
-  CE
-  PASAPORTE
-}
-
-// Inscripción a un curso
 model Inscripcion {
   id               String            @id @default(cuid())
   estado           EstadoInscripcion @default(PENDIENTE)
@@ -138,15 +100,79 @@ model Inscripcion {
   notas            String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-
-  // Relaciones
-  participanteId String
-  participante   Participante @relation(fields: [participanteId], references: [id])
-  cursoId        String
-  curso          Curso        @relation(fields: [cursoId], references: [id])
-  certificado    Certificado?
+  participanteId   String
+  cursoId          String
+  curso            Curso             @relation(fields: [cursoId], references: [id])
+  participante     Participante      @relation(fields: [participanteId], references: [id])
 
   @@unique([participanteId, cursoId])
+}
+
+model Certificado {
+  id                   String            @id @default(cuid())
+  codigoVerificacion   String            @unique
+  nombreCurso          String
+  tipoCurso            TipoCurso
+  modalidad            Modalidad
+  horasAcademicas      Int
+  horasCronologicas    Int?
+  creditos             Float?
+  temario              Json              @default("[]")
+  fechaInicio          DateTime
+  fechaFin             DateTime
+  fechaEmision         DateTime          @default(now())
+  institucionNombre    String            @default("CertificadosPerú")
+  institucionRuc       String?
+  institucionDireccion String?
+  institucionLogo      String?
+  firmantes            Json
+  estado               EstadoCertificado @default(EMITIDO)
+  urlVerificacion      String
+  qrCode               String?
+  observaciones        String?
+  nota                 Float?
+  notaLetra            String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  participanteId       String
+  cursoId              String
+  emitidoPorId         String
+  curso                Curso             @relation(fields: [cursoId], references: [id])
+  emitidoPor           Usuario           @relation("CertificadoEmitidoPor", fields: [emitidoPorId], references: [id])
+  participante         Participante      @relation(fields: [participanteId], references: [id])
+}
+
+model Configuracion {
+  id          String   @id @default(cuid())
+  clave       String   @unique
+  valor       String
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Rol {
+  SUPERADMIN
+  ADMIN
+  EDITOR
+}
+
+enum TipoCurso {
+  DIPLOMADO
+  CERTIFICADO
+  CONSTANCIA
+}
+
+enum Modalidad {
+  VIRTUAL
+  PRESENCIAL
+  SEMIPRESENCIAL
+}
+
+enum TipoDocumento {
+  DNI
+  CE
+  PASAPORTE
 }
 
 enum EstadoInscripcion {
@@ -157,100 +183,8 @@ enum EstadoInscripcion {
   CANCELADO
 }
 
-// Certificado emitido (información para concursos públicos del Perú)
-model Certificado {
-  id                 String            @id @default(cuid())
-  codigoVerificacion String            @unique
-
-  // Datos del curso al momento de emisión (snapshot)
-  nombreCurso       String
-  tipoCurso         TipoCurso
-  modalidad         Modalidad
-  horasAcademicas   Int
-  horasCronologicas Int?
-  creditos          Float?
-  temario           String[]
-
-  // Fechas del programa (opcionales para cursos autodidactas)
-  fechaInicio  DateTime?
-  fechaFin     DateTime?
-  fechaEmision DateTime @default(now())
-
-  // Datos de la institución
-  institucionNombre    String  @default("CertificadosPerú")
-  institucionRuc       String?
-  institucionDireccion String?
-  institucionLogo      String?
-
-  // Firmantes
-  firmantes Json? // Array de {nombre, cargo, firma}
-
-  // Estado y verificación
-  estado          EstadoCertificado @default(EMITIDO)
-  urlVerificacion String
-  qrCode          String?
-  observaciones   String?
-
-  // Nota/Calificación (opcional)
-  nota       Float?
-  notaLetra  String? // "Aprobado", "Excelente", etc.
-
-  // Auditoría
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relaciones
-  participanteId String
-  participante   Participante @relation(fields: [participanteId], references: [id])
-  cursoId        String
-  curso          Curso        @relation(fields: [cursoId], references: [id])
-  inscripcionId  String?      @unique
-  inscripcion    Inscripcion? @relation(fields: [inscripcionId], references: [id])
-  emitidoPorId   String
-  emitidoPor     Usuario      @relation("CertificadoEmitidoPor", fields: [emitidoPorId], references: [id])
-}
-
 enum EstadoCertificado {
   EMITIDO
   PENDIENTE
   ANULADO
-}
-
-// Configuración del sistema
-model Configuracion {
-  id          String   @id @default(cuid())
-  clave       String   @unique
-  valor       String
-  descripcion String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// Plantilla de Certificado
-model PlantillaCertificado {
-  id          String      @id @default(cuid())
-  nombre      String
-  descripcion String?
-  tipo        TipoCurso   // DIPLOMADO, CERTIFICADO, CONSTANCIA
-  activo      Boolean     @default(true)
-  esDefault   Boolean     @default(false)
-
-  // Diseño
-  orientacion   Orientacion @default(HORIZONTAL)
-  fondoUrl      String?     // Imagen de fondo
-  fondoColor    String?     // Color de fondo si no hay imagen
-
-  // Configuración de elementos (posiciones en porcentaje del documento)
-  config        Json        // Configuración completa de posiciones y estilos
-
-  // Metadatos
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  creadorId   String?
-  creador     Usuario?  @relation("PlantillaCreador", fields: [creadorId], references: [id])
-}
-
-enum Orientacion {
-  HORIZONTAL
-  VERTICAL
 }
