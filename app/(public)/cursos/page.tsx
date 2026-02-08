@@ -30,6 +30,15 @@ const tipoConfig: Record<string, { icon: any; label: string; color: string }> = 
   constancia: { icon: FileText, label: 'Constancias', color: 'bg-emerald-100 text-emerald-700' },
 };
 
+// Función para normalizar texto (quitar tildes y minúsculas)
+function normalize(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 function CursosContent() {
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
@@ -76,7 +85,15 @@ function CursosContent() {
   }
 
   const filteredCourses = courses.filter((course) => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchNorm = normalize(searchTerm);
+    const titleNorm = normalize(course.title);
+    const descNorm = normalize(course.shortDescription || '');
+    const catNameNorm = normalize(course.category?.name || '');
+
+    const matchesSearch = !searchTerm ||
+      titleNorm.includes(searchNorm) ||
+      descNorm.includes(searchNorm) ||
+      catNameNorm.includes(searchNorm);
     const matchesCategory = selectedCategory === 'all' || course.category?.slug === selectedCategory;
     const matchesType = selectedType === 'all' || course.type === selectedType;
     return matchesSearch && matchesCategory && matchesType;
