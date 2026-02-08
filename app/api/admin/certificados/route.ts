@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         horasAcademicas: curso.horasAcademicas,
         horasCronologicas: curso.horasCronologicas,
         creditos: curso.creditos,
-        temario: curso.temario,
+        temario: curso.temario as any,
         fechaInicio: body.fechaInicio ? new Date(body.fechaInicio) : new Date(),
         fechaFin: body.fechaFin ? new Date(body.fechaFin) : new Date(),
         institucionNombre: configMap['institucion_nombre'] || 'CertificadosPerú',

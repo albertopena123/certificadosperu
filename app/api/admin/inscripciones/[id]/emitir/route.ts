@@ -32,7 +32,6 @@ export async function POST(
       include: {
         participante: true,
         curso: true,
-        certificado: true,
       },
     });
 
@@ -43,10 +42,18 @@ export async function POST(
       );
     }
 
-    // Check if certificate already exists
-    if (inscripcion.certificado) {
+    // Check if certificate already exists for this participant and course
+    const certificadoExistente = await prisma.certificado.findFirst({
+      where: {
+        participanteId: inscripcion.participanteId,
+        cursoId: inscripcion.cursoId,
+        estado: 'EMITIDO',
+      },
+    });
+
+    if (certificadoExistente) {
       return NextResponse.json(
-        { error: 'Ya existe un certificado para esta inscripción', certificado: inscripcion.certificado },
+        { error: 'Ya existe un certificado para esta inscripción', certificado: certificadoExistente },
         { status: 400 }
       );
     }
@@ -64,20 +71,48 @@ export async function POST(
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://certificadosperu.com';
     const urlVerificacion = `${baseUrl}/verificar/${codigoVerificacion}`;
 
+    // Get configuration
+    const configs = await prisma.configuracion.findMany({
+      where: {
+        clave: {
+          in: ['institucion_nombre', 'institucion_ruc', 'institucion_direccion', 'firma_director', 'cargo_director'],
+        },
+      },
+    });
+
+    const configMap = configs.reduce((acc: Record<string, string>, c) => {
+      acc[c.clave] = c.valor;
+      return acc;
+    }, {} as Record<string, string>);
+
+    // Calculate dates
+    const fechaInicio = inscripcion.curso.fechaInicio || inscripcion.fechaInscripcion;
+    const fechaFin = inscripcion.curso.fechaFin || new Date();
+
     // Create the certificate
     const certificado = await prisma.certificado.create({
       data: {
         participanteId: inscripcion.participanteId,
         cursoId: inscripcion.cursoId,
-        inscripcionId: inscripcion.id,
         nombreCurso: inscripcion.curso.nombre,
         tipoCurso: inscripcion.curso.tipo,
         modalidad: inscripcion.curso.modalidad,
         horasAcademicas: inscripcion.curso.horasAcademicas,
         horasCronologicas: inscripcion.curso.horasCronologicas,
         creditos: inscripcion.curso.creditos,
-        temario: inscripcion.curso.temario || [],
+        temario: (inscripcion.curso.temario as any) || [],
+        fechaInicio,
+        fechaFin,
         fechaEmision: new Date(),
+        institucionNombre: configMap['institucion_nombre'] || 'CertificadosPerú',
+        institucionRuc: configMap['institucion_ruc'],
+        institucionDireccion: configMap['institucion_direccion'],
+        firmantes: [
+          {
+            nombre: configMap['firma_director'] || 'Director General',
+            cargo: configMap['cargo_director'] || 'Director',
+          },
+        ],
         codigoVerificacion,
         urlVerificacion,
         estado: 'EMITIDO',

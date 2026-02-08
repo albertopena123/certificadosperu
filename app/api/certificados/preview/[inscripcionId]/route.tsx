@@ -124,7 +124,7 @@ export async function GET(
       hours: inscripcion.curso.horasAcademicas,
       chronologicalHours: inscripcion.curso.horasCronologicas || undefined,
       credits: inscripcion.curso.creditos || undefined,
-      syllabus: inscripcion.curso.temario || [],
+      syllabus: (inscripcion.curso.temario as string[]) || [],
       modality: modalityLabels[inscripcion.curso.modalidad] || inscripcion.curso.modalidad,
       startDate: formatDate(inscripcion.curso.fechaInicio),
       endDate: formatDate(inscripcion.curso.fechaFin),

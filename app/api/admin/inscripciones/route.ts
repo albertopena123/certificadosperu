@@ -59,13 +59,6 @@ export async function GET(request: NextRequest) {
               precio: true,
             },
           },
-          certificado: {
-            select: {
-              id: true,
-              codigoVerificacion: true,
-              estado: true,
-            },
-          },
         },
         orderBy: { fechaInscripcion: 'desc' },
         skip: (page - 1) * limit,
@@ -74,8 +67,35 @@ export async function GET(request: NextRequest) {
       prisma.inscripcion.count({ where }),
     ]);
 
+    // Get certificates for these inscriptions
+    const participanteCursoKeys = inscripciones.map(i => ({
+      participanteId: i.participanteId,
+      cursoId: i.cursoId,
+    }));
+
+    const certificados = await prisma.certificado.findMany({
+      where: {
+        OR: participanteCursoKeys.length > 0 ? participanteCursoKeys : [{ id: 'none' }],
+      },
+      select: {
+        id: true,
+        codigoVerificacion: true,
+        estado: true,
+        participanteId: true,
+        cursoId: true,
+      },
+    });
+
+    // Map certificates to inscriptions
+    const inscripcionesConCertificado = inscripciones.map(inscripcion => {
+      const certificado = certificados.find(
+        c => c.participanteId === inscripcion.participanteId && c.cursoId === inscripcion.cursoId
+      );
+      return { ...inscripcion, certificado: certificado || null };
+    });
+
     return NextResponse.json({
-      inscripciones,
+      inscripciones: inscripcionesConCertificado,
       pagination: {
         total,
         pages: Math.ceil(total / limit),

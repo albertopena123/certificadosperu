@@ -22,7 +22,6 @@ export async function GET(
       include: {
         participante: true,
         curso: true,
-        certificado: true,
       },
     });
 
@@ -33,7 +32,15 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(inscripcion);
+    // Check if certificate exists for this participant and course
+    const certificado = await prisma.certificado.findFirst({
+      where: {
+        participanteId: inscripcion.participanteId,
+        cursoId: inscripcion.cursoId,
+      },
+    });
+
+    return NextResponse.json({ ...inscripcion, certificado });
   } catch (error) {
     console.error('Error fetching inscripcion:', error);
     return NextResponse.json(
@@ -93,11 +100,18 @@ export async function PATCH(
       include: {
         participante: true,
         curso: true,
-        certificado: true,
       },
     });
 
-    return NextResponse.json(updatedInscripcion);
+    // Check if certificate exists for this participant and course
+    const certificado = await prisma.certificado.findFirst({
+      where: {
+        participanteId: updatedInscripcion.participanteId,
+        cursoId: updatedInscripcion.cursoId,
+      },
+    });
+
+    return NextResponse.json({ ...updatedInscripcion, certificado });
   } catch (error) {
     console.error('Error updating inscripcion:', error);
     return NextResponse.json(

@@ -117,7 +117,7 @@ export async function GET(
       hours: certificado.horasAcademicas,
       chronologicalHours: certificado.horasCronologicas || undefined,
       credits: certificado.creditos || undefined,
-      syllabus: certificado.temario || [],
+      syllabus: (certificado.temario as string[]) || [],
       modality: modalityLabels[certificado.modalidad] || certificado.modalidad,
       startDate: formatDate(certificado.fechaInicio),
       endDate: formatDate(certificado.fechaFin),
