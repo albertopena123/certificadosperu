@@ -9,6 +9,7 @@ import { StatsSection } from '@/components/landing/stats-section';
 import { TestimonialsSection } from '@/components/landing/testimonials-section';
 import { CTASection } from '@/components/landing/cta-section';
 import { OrganizationJsonLd, WebsiteJsonLd, FAQJsonLd } from '@/components/seo/json-ld';
+import { FloatingChatBot } from '@/components/floating-chat-bot';
 
 const faqData = [
   {
@@ -47,6 +48,7 @@ export default function Home() {
         <CTASection />
       </main>
       <Footer />
+      <FloatingChatBot />
     </div>
   );
 }

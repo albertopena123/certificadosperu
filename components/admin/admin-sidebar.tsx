@@ -17,6 +17,7 @@ import {
   BookOpen,
   ShieldCheck,
   FolderOpen,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,12 @@ const menuItems = [
     title: 'Inscripciones',
     items: [
       { label: 'Todas las Inscripciones', href: '/admin/inscripciones', icon: FolderOpen },
+    ],
+  },
+  {
+    title: 'Solicitudes',
+    items: [
+      { label: 'Solicitudes de Cursos', href: '/admin/solicitudes', icon: MessageSquarePlus },
     ],
   },
   {

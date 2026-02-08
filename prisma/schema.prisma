@@ -151,6 +151,26 @@ model Configuracion {
   updatedAt   DateTime @updatedAt
 }
 
+model SolicitudCurso {
+  id              String                @id @default(cuid())
+  cursoSolicitado String
+  descripcion     String?
+  nombre          String?
+  email           String?
+  telefono        String?
+  estado          EstadoSolicitudCurso  @default(PENDIENTE)
+  notas           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+}
+
+enum EstadoSolicitudCurso {
+  PENDIENTE
+  REVISADO
+  CREADO
+  RECHAZADO
+}
+
 enum Rol {
   SUPERADMIN
   ADMIN

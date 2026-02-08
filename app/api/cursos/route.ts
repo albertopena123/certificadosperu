@@ -1,10 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// Función para normalizar texto (quitar tildes)
-function removeAccents(str: string): string {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+// Función para normalizar texto (quitar tildes y minúsculas)
+function normalize(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
 }
+
+// Diccionario de sinónimos para expandir búsquedas
+const synonyms: Record<string, string[]> = {
+  'programacion': ['java', 'python', 'php', 'javascript', 'csharp', 'nodejs', 'react', 'angular', 'desarrollo', 'software', 'codigo', 'developer'],
+  'desarrollo': ['programacion', 'software', 'web', 'aplicaciones'],
+  'web': ['html', 'css', 'javascript', 'frontend', 'backend', 'desarrollo'],
+  'ofimatica': ['excel', 'word', 'powerpoint', 'office', 'microsoft'],
+  'office': ['excel', 'word', 'powerpoint', 'ofimatica'],
+  'enfermeria': ['salud', 'hospital', 'uci', 'emergencia', 'cuidados', 'neonatologia'],
+  'salud': ['enfermeria', 'medicina', 'hospital', 'cuidados', 'bioseguridad'],
+  'administracion': ['gestion', 'publica', 'empresarial', 'siaf', 'siga', 'estado'],
+  'contabilidad': ['finanzas', 'tributacion', 'sunat', 'contador', 'planilla', 'niif'],
+  'marketing': ['publicidad', 'digital', 'redes sociales', 'community', 'seo', 'ads'],
+  'seguridad': ['sst', 'riesgos', 'iperc', 'prevencion', 'trabajo'],
+  'base de datos': ['sql', 'mysql', 'postgresql', 'mongodb', 'database'],
+  'cloud': ['aws', 'azure', 'gcp', 'nube', 'devops'],
+  'redes': ['networking', 'cisco', 'ccna', 'mikrotik', 'cableado'],
+};
 
 // GET - Listar cursos públicos (activos)
 export async function GET(request: NextRequest) {
@@ -34,9 +56,7 @@ export async function GET(request: NextRequest) {
       where.destacado = true;
     }
 
-    // Si hay búsqueda, obtener más resultados para filtrar
-    const fetchLimit = search ? 100 : limit;
-
+    // Obtener todos los cursos activos
     let cursos = await prisma.curso.findMany({
       where,
       select: {
@@ -69,21 +89,93 @@ export async function GET(request: NextRequest) {
         { destacado: 'desc' },
         { createdAt: 'desc' },
       ],
-      take: fetchLimit,
     });
 
-    // Filtrar por búsqueda (insensible a tildes y mayúsculas)
+    // Búsqueda ESTRICTA
     if (search) {
-      const searchNormalized = removeAccents(search.toLowerCase());
-      cursos = cursos.filter(curso => {
-        const nombre = removeAccents(curso.nombre.toLowerCase());
-        const descripcion = removeAccents((curso.descripcion || '').toLowerCase());
-        const descripcionCorta = removeAccents((curso.descripcionCorta || '').toLowerCase());
+      const searchNorm = normalize(search);
+      // Limpiar palabras comunes que no aportan a la búsqueda
+      const stopWords = ['curso', 'cursos', 'de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'para', 'con', 'en', 'y', 'o', 'que', 'te', 'digo', 'quiero', 'necesito', 'busco'];
+      const searchWords = searchNorm
+        .split(/\s+/)
+        .filter(w => w.length >= 2 && !stopWords.includes(w));
 
-        return nombre.includes(searchNormalized) ||
-               descripcion.includes(searchNormalized) ||
-               descripcionCorta.includes(searchNormalized);
-      }).slice(0, limit);
+      if (searchWords.length === 0) {
+        // Si solo hay palabras vacías, no buscar
+        cursos = cursos.slice(0, limit);
+      } else {
+        // Expandir términos con sinónimos
+        const expandedTerms = new Set<string>(searchWords);
+        for (const word of searchWords) {
+          if (synonyms[word]) {
+            synonyms[word].forEach(syn => expandedTerms.add(normalize(syn)));
+          }
+          // Buscar sinónimos inversos
+          for (const [key, values] of Object.entries(synonyms)) {
+            if (values.some(v => normalize(v).includes(word) || word.includes(normalize(v)))) {
+              expandedTerms.add(normalize(key));
+            }
+          }
+        }
+
+        // Preparar cursos con campos normalizados
+        const cursosIndexados = cursos.map(curso => {
+          const nombreNorm = normalize(curso.nombre);
+          const descCortaNorm = normalize(curso.descripcionCorta || '');
+          const catNorm = normalize(curso.categoria?.nombre || '');
+
+          return {
+            ...curso,
+            nombreNorm,
+            descCortaNorm,
+            catNorm,
+          };
+        });
+
+        // BÚSQUEDA ESTRICTA: Solo devolver si hay coincidencia REAL
+        const results: typeof cursos = [];
+
+        for (const curso of cursosIndexados) {
+          let score = 0;
+
+          // Verificar coincidencias en el nombre (mayor peso)
+          for (const term of expandedTerms) {
+            if (curso.nombreNorm.includes(term)) {
+              // Coincidencia directa en nombre = alta puntuación
+              score += 10;
+            }
+          }
+
+          // Verificar coincidencias en descripción corta (menor peso)
+          for (const term of expandedTerms) {
+            if (curso.descCortaNorm.includes(term)) {
+              score += 3;
+            }
+          }
+
+          // Verificar coincidencias en categoría
+          for (const term of expandedTerms) {
+            if (curso.catNorm.includes(term)) {
+              score += 2;
+            }
+          }
+
+          // Solo incluir si tiene puntuación significativa
+          // Mínimo: debe tener al menos UNA coincidencia en el nombre
+          // O múltiples coincidencias en otros campos
+          if (score >= 5) {
+            (curso as any)._score = score;
+            results.push(curso);
+          }
+        }
+
+        // Ordenar por puntuación
+        results.sort((a: any, b: any) => (b._score || 0) - (a._score || 0));
+
+        cursos = results.slice(0, limit);
+      }
+    } else {
+      cursos = cursos.slice(0, limit);
     }
 
     // Transformar al formato esperado por el frontend
@@ -96,7 +188,7 @@ export async function GET(request: NextRequest) {
       image: curso.imagen || '/placeholder-course.jpg',
       price: curso.precio,
       originalPrice: curso.precioOriginal,
-      rating: 4.5, // TODO: Implementar sistema de ratings
+      rating: 4.5,
       reviewCount: curso._count.inscripciones,
       studentCount: curso._count.inscripciones,
       instructor: {
