@@ -463,6 +463,14 @@ export function FloatingChatBot() {
         </div>
       </div>
 
+      {/* Backdrop - closes chat when clicking outside */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/10"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Chat Window */}
       <div
         className={cn(
