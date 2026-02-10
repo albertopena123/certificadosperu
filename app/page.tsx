@@ -10,6 +10,7 @@ import { TestimonialsSection } from '@/components/landing/testimonials-section';
 import { CTASection } from '@/components/landing/cta-section';
 import { OrganizationJsonLd, WebsiteJsonLd, FAQJsonLd } from '@/components/seo/json-ld';
 import { FloatingChatBot } from '@/components/floating-chat-bot';
+import { FloatingWhatsApp } from '@/components/floating-whatsapp';
 
 const faqData = [
   {
@@ -48,6 +49,7 @@ export default function Home() {
         <CTASection />
       </main>
       <Footer />
+      <FloatingWhatsApp />
       <FloatingChatBot />
     </div>
   );
